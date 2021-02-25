@@ -3,6 +3,7 @@
  * Copyright (C) 2007 Holger Hans Peter Freyther <zecke@selfish.org>
  * Copyright (C) 2008, 2009 Dirk Schulze <krit@webkit.org>
  * Copyright (C) 2010 Torch Mobile (Beijing) Co. Ltd. All rights reserved.
+ * Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -75,6 +76,9 @@
 #endif
 #endif
 
+#if ENABLE(DIRECTFB)
+#include "DirectfbUtilities.h"
+#endif
 
 namespace WebCore {
 using namespace std;
@@ -280,7 +284,15 @@ ImageBuffer::ImageBuffer(const FloatSize& size, float resolutionScale, ColorSpac
     if (m_size.isEmpty())
         return;
 
-#if ENABLE(ACCELERATED_2D_CANVAS)
+#if ENABLE(DIRECTFB)
+    if (renderingMode == Accelerated && size.width() > 0 && size.height() > 0)
+    {
+        IDirectFBSurface* pDFBSurface =  createDFBSurface( DSPF_ARGB, IntSize(size), NULL);
+        m_data.m_surface = adoptRef(cairo_directfb_surface_create(dfb(), pDFBSurface));
+        pDFBSurface->Release(pDFBSurface);
+    }
+    else
+#elif ENABLE(ACCELERATED_2D_CANVAS)
     if (m_data.m_renderingMode == Accelerated) {
         m_data.createCairoGLSurface();
         if (!m_data.m_surface || cairo_surface_status(m_data.m_surface.get()) != CAIRO_STATUS_SUCCESS)

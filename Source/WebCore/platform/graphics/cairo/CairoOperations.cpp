@@ -7,6 +7,7 @@
  * Copyright (C) 2010, 2011 Igalia S.L.
  * Copyright (C) Research In Motion Limited 2010. All rights reserved.
  * Copyright (C) 2012, Intel Corporation
+ * Copyright (C) 2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -160,9 +161,24 @@ static inline void fillRectWithColor(cairo_t* cr, const FloatRect& rect, const C
     if (!color.isVisible() && cairo_get_operator(cr) == CAIRO_OPERATOR_OVER)
         return;
 
+    MonotonicTime startTime = MonotonicTime::now();
+
     setSourceRGBAFromColor(cr, color);
     cairo_rectangle(cr, rect.x(), rect.y(), rect.width(), rect.height());
     cairo_fill(cr);
+
+#if 0
+    static double total = 0.0;
+    static unsigned int num_calls = 0;
+    double diff_ms = (MonotonicTime::now() - startTime).milliseconds();
+
+    total += diff_ms;
+    num_calls++;
+
+    if (num_calls % 20 == 0)
+        WTFLogAlways("CairoOperations::fillRectWithColor (%dx%d) took %f ms, ave = %f", (int)rect.width(), (int)rect.height(),
+                        diff_ms, total/(double)num_calls);
+#endif
 }
 
 enum PathDrawingStyle {
@@ -882,7 +898,17 @@ void drawSurface(PlatformContextCairo& platformContext, cairo_surface_t* surface
         srcRect.setHeight(std::fabs(originalSrcRect.height()));
     }
 
-    RefPtr<cairo_surface_t> patternSurface = surface;
+    RefPtr<cairo_surface_t> patternSurface;
+#if ENABLE(DIRECTFB) && (defined(CAIRO_HAS_DIRECTFB_SURFACE) && CAIRO_HAS_DIRECTFB_SURFACE)
+    cairo_surface_t * imgSurf = NULL;
+    if(cairo_surface_get_type(surface) == CAIRO_SURFACE_TYPE_DIRECTFB) {
+        imgSurf = cairo_surface_map_to_image(surface, NULL);
+        patternSurface = imgSurf;
+    }
+    else
+#endif
+        patternSurface = surface;
+
     float leftPadding = 0;
     float topPadding = 0;
     if (srcRect.x() || srcRect.y() || srcRect.size() != cairoSurfaceSize(surface)) {
@@ -941,6 +967,12 @@ void drawSurface(PlatformContextCairo& platformContext, cairo_surface_t* surface
     cairo_save(cr);
     drawPatternToCairoContext(cr, pattern.get(), destRect, globalAlpha);
     cairo_restore(cr);
+
+#if ENABLE(DIRECTFB) && (defined(CAIRO_HAS_DIRECTFB_SURFACE) && CAIRO_HAS_DIRECTFB_SURFACE)
+    if(cairo_surface_get_type(surface) == CAIRO_SURFACE_TYPE_DIRECTFB) {
+        cairo_surface_unmap_image(surface, imgSurf);
+    }
+#endif    
 }
 
 void drawRect(PlatformContextCairo& platformContext, const FloatRect& rect, float borderThickness, const Color& fillColor, StrokeStyle strokeStyle, const Color& strokeColor)

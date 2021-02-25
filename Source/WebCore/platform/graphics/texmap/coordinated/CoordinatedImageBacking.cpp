@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 Company 100, Inc. All rights reserved.
+ * Copyright (C) 2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -105,7 +106,12 @@ void CoordinatedImageBacking::update()
 
     m_nativeImagePtr = WTFMove(nativeImagePtr);
 
-    auto buffer = Nicosia::Buffer::create(IntSize(m_image->size()), !m_image->currentFrameKnownToBeOpaque() ? Nicosia::Buffer::SupportsAlpha : Nicosia::Buffer::NoFlags);
+#if ENABLE(ACCELERATED_PAINTING)
+    Nicosia::Buffer::Flag flags = Nicosia::Buffer::Accelerated;
+#else
+    Nicosia::Buffer::Flag flags = Nicosia::Buffer::NoFlags;
+#endif
+    auto buffer = Nicosia::Buffer::create(IntSize(m_image->size()), !m_image->currentFrameKnownToBeOpaque() ? (Nicosia::Buffer::SupportsAlpha | flags) : (Nicosia::Buffer::NoFlags | flags) );
     Nicosia::PaintingContext::paint(buffer,
         [this](GraphicsContext& context)
         {

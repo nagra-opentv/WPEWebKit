@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Igalia S.L.
+ * Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -28,11 +29,14 @@
 
 #if PLATFORM(WPE)
 
+#if USE(EGL)
 #include "GLContextEGL.h"
 // FIXME: For now default to the GBM EGL platform, but this should really be
 // somehow deducible from the build configuration.
 #define __GBM__ 1
 #include "EpoxyEGL.h"
+#endif 
+
 #include <wpe/wpe-egl.h>
 
 namespace WebCore {
@@ -56,6 +60,7 @@ void PlatformDisplayWPE::initialize(int hostFd)
 {
     m_backend = wpe_renderer_backend_egl_create(hostFd);
 
+#if USE(EGL)
     m_eglDisplay = eglGetDisplay(wpe_renderer_backend_egl_get_native_display(m_backend));
     if (m_eglDisplay == EGL_NO_DISPLAY) {
         WTFLogAlways("PlatformDisplayWPE: could not create the EGL display: %s.", GLContextEGL::lastErrorString());
@@ -63,6 +68,7 @@ void PlatformDisplayWPE::initialize(int hostFd)
     }
 
     PlatformDisplay::initializeEGLDisplay();
+#endif
 }
 
 } // namespace WebCore

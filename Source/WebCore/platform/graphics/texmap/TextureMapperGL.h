@@ -1,6 +1,7 @@
 /*
  Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies)
  Copyright (C) 2015 Igalia S.L.
+ Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Library General Public
@@ -56,9 +57,8 @@ public:
         ShouldConvertTextureARGBToRGBA = 0x100
     };
 
-    typedef int Flags;
-
     // TextureMapper implementation
+    void drawRect(const Color&, float borderWidth, const FloatRect&, const TransformationMatrix&, GC3Denum, bool) override;
     void drawBorder(const Color&, float borderWidth, const FloatRect&, const TransformationMatrix&) override;
     void drawNumber(int number, const Color&, const FloatPoint&, const TransformationMatrix&) override;
     void drawTexture(const BitmapTexture&, const FloatRect&, const TransformationMatrix&, float opacity, unsigned exposedEdges) override;
@@ -79,8 +79,6 @@ public:
 
     void drawFiltered(const BitmapTexture& sourceTexture, const BitmapTexture* contentTexture, const FilterOperation&, int pass);
 
-    void setEnableEdgeDistanceAntialiasing(bool enabled) { m_enableEdgeDistanceAntialiasing = enabled; }
-
 private:
     void drawTexturedQuadWithProgram(TextureMapperShaderProgram&, uint32_t texture, Flags, const IntSize&, const FloatRect&, const TransformationMatrix& modelViewMatrix, float opacity);
     void draw(const FloatRect&, const TransformationMatrix& modelViewMatrix, TextureMapperShaderProgram&, GLenum drawingMode, Flags);
@@ -96,7 +94,6 @@ private:
     TextureMapperContextAttributes m_contextAttributes;
     TextureMapperGLData* m_data;
     ClipStack m_clipStack;
-    bool m_enableEdgeDistanceAntialiasing;
 };
 
 } // namespace WebCore

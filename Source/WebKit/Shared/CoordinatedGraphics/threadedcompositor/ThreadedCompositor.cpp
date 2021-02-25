@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2014 Igalia S.L.
- *
+ * Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
+ * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -38,7 +39,7 @@
 #include <epoxy/gl.h>
 #elif USE(OPENGL_ES)
 #include <GLES2/gl2.h>
-#else
+#elif USE(EGL)
 #include <GL/gl.h>
 #endif
 
@@ -229,15 +230,23 @@ void ThreadedCompositor::renderLayerTree()
     }
 
     if (needsResize)
+#if USE(TEXTURE_MAPPER_GL)
         glViewport(0, 0, viewportSize.width(), viewportSize.height());
+#else 
+        LOG("hreadedCompositor::renderLayerTree(). needsResize is TRUE, but not needed for TEXTURE_MAPPER_CAIRO");
+#endif
 
     TransformationMatrix viewportTransform;
     viewportTransform.scale(scaleFactor);
     viewportTransform.translate(-scrollPosition.x(), -scrollPosition.y());
 
     if (!drawsBackground) {
+#if USE(TEXTURE_MAPPER_GL)
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);
+#else 
+        notImplemented();
+#endif        
     }
 
     m_scene->applyStateChanges(states);

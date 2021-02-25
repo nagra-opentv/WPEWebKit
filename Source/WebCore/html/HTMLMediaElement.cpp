@@ -6336,7 +6336,7 @@ bool HTMLMediaElement::hasMediaControls() const
     return false;
 #else
 
-    if (auto userAgent = userAgentShadowRoot()) {
+    if (auto root = userAgentShadowRoot()) {
         RefPtr<Node> node = childrenOfType<MediaControls>(*root).first();
         ASSERT_WITH_SECURITY_IMPLICATION(!node || node->isMediaControls());
         return node;

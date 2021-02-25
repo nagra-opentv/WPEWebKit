@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies)
  * Copyright (C) 2015 Igalia S.L.
+ * Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,6 +30,8 @@
 
 #if USE(TEXTURE_MAPPER_GL)
 #include "BitmapTextureGL.h"
+#else 
+#include "BitmapTextureImageBuffer.h"
 #endif
 
 namespace WebCore {
@@ -36,7 +39,7 @@ namespace WebCore {
 static const Seconds releaseUnusedSecondsTolerance { 3_s };
 static const Seconds releaseUnusedTexturesTimerInterval { 500_ms };
 
-#if USE(TEXTURE_MAPPER_GL)
+#if USE(TEXTURE_MAPPER)
 BitmapTexturePool::BitmapTexturePool(const TextureMapperContextAttributes& contextAttributes)
     : m_contextAttributes(contextAttributes)
     , m_releaseUnusedTexturesTimer(RunLoop::current(), this, &BitmapTexturePool::releaseUnusedTexturesTimerFired)
@@ -87,6 +90,8 @@ RefPtr<BitmapTexture> BitmapTexturePool::createTexture(const BitmapTexture::Flag
 {
 #if USE(TEXTURE_MAPPER_GL)
     return BitmapTextureGL::create(m_contextAttributes, flags);
+#elif USE(TEXTURE_MAPPER_CAIRO)
+    return BitmapTextureImageBuffer::create();
 #else
     UNUSED_PARAM(flags);
     return nullptr;

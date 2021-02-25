@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies)
+ Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Library General Public
@@ -31,6 +32,10 @@
     a need for a platform specific scene-graph library like CoreAnimations or QGraphicsView.
 */
 
+#if ENABLE(GRAPHICS_CONTEXT_3D)
+#include "GraphicsContext3D.h"
+#endif
+
 namespace WebCore {
 
 class BitmapTexturePool;
@@ -50,6 +55,7 @@ public:
         RepeatWrap
     };
 
+    typedef int Flags;
     typedef unsigned PaintFlags;
 
     WEBCORE_EXPORT static std::unique_ptr<TextureMapper> create();
@@ -65,6 +71,10 @@ public:
         BottomEdge = 1 << 3,
         AllEdges = LeftEdge | RightEdge | TopEdge | BottomEdge,
     };
+
+#if ENABLE(OPENGL)
+    virtual void drawRect(const Color&, float borderWidth, const FloatRect&, const TransformationMatrix&, GC3Denum, bool) = 0;
+#endif
 
     virtual void drawBorder(const Color&, float borderWidth, const FloatRect&, const TransformationMatrix&) = 0;
     virtual void drawNumber(int number, const Color&, const FloatPoint&, const TransformationMatrix&) = 0;
@@ -93,6 +103,9 @@ public:
     void setPatternTransform(const TransformationMatrix& p) { m_patternTransform = p; }
     void setWrapMode(WrapMode m) { m_wrapMode = m; }
 
+    void setEnableEdgeDistanceAntialiasing(bool enabled) { m_enableEdgeDistanceAntialiasing = enabled; }
+    bool getEnableEdgeDistanceAntialiasing() { return m_enableEdgeDistanceAntialiasing; }
+
 protected:
     std::unique_ptr<BitmapTexturePool> m_texturePool;
 
@@ -103,6 +116,8 @@ protected:
 private:
 #if USE(TEXTURE_MAPPER_GL)
     static std::unique_ptr<TextureMapper> platformCreateAccelerated();
+#elif USE(TEXTURE_MAPPER_CAIRO)
+    static std::unique_ptr<TextureMapper> platformCreateAccelerated();
 #else
     static std::unique_ptr<TextureMapper> platformCreateAccelerated()
     {
@@ -112,6 +127,7 @@ private:
     bool m_isMaskMode { false };
     TransformationMatrix m_patternTransform;
     WrapMode m_wrapMode { StretchWrap };
+    bool m_enableEdgeDistanceAntialiasing {false};
 };
 
 }

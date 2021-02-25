@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2010 Igalia S.L.
  * Copyright (C) 2011 ProFUSION embedded systems
+ * Copyright (C) 2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -323,6 +324,16 @@ IntSize cairoSurfaceSize(cairo_surface_t* surface)
         ASSERT(surface);
         ASSERT(cairo_surface_get_type(surface) == CAIRO_SURFACE_TYPE_IMAGE);
         return IntSize(cairo_image_surface_get_width(surface), cairo_image_surface_get_height(surface));
+#endif
+#if ENABLE(DIRECTFB) && (defined(CAIRO_HAS_DIRECTFB_SURFACE) && CAIRO_HAS_DIRECTFB_SURFACE)
+    case CAIRO_SURFACE_TYPE_DIRECTFB:
+    {
+        cairo_surface_t * imgSurf = NULL;
+        imgSurf = cairo_surface_map_to_image(surface, NULL);
+        IntSize surfSize = IntSize(cairo_image_surface_get_width(imgSurf), cairo_image_surface_get_height(imgSurf));
+        cairo_surface_unmap_image(surface, imgSurf);
+        return surfSize;
+    }
 #endif
     default:
         ASSERT_NOT_REACHED();

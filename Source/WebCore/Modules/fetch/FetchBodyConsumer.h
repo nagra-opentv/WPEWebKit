@@ -28,6 +28,8 @@
 
 #pragma once
 
+#if ENABLE(STREAMS_API)
+
 #include "FetchBodySource.h"
 #include "JSDOMPromiseDeferred.h"
 #include "ReadableStreamSink.h"
@@ -85,3 +87,5 @@ private:
 };
 
 } // namespace WebCore
+
+#endif 

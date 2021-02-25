@@ -2,6 +2,7 @@
  Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies)
  Copyright (C) 2012 Igalia S.L.
  Copyright (C) 2012 Adobe Systems Incorporated
+ Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Library General Public
@@ -23,7 +24,6 @@
 #include "TextureMapperGL.h"
 
 #if USE(TEXTURE_MAPPER_GL)
-
 #include "BitmapTextureGL.h"
 #include "BitmapTexturePool.h"
 #include "Extensions3D.h"
@@ -179,7 +179,6 @@ Ref<TextureMapperShaderProgram> TextureMapperGLData::getShaderProgram(TextureMap
 
 TextureMapperGL::TextureMapperGL()
     : m_contextAttributes(TextureMapperContextAttributes::get())
-    , m_enableEdgeDistanceAntialiasing(false)
 {
     void* platformContext = GLContext::current()->platformContext();
     ASSERT(platformContext);
@@ -261,6 +260,25 @@ void TextureMapperGL::drawBorder(const Color& color, float width, const FloatRec
     draw(targetRect, modelViewMatrix, program.get(), GL_LINE_LOOP, !color.isOpaque() ? ShouldBlend : 0);
 }
 
+void TextureMapperGL::drawRect(const Color& color, float width, const FloatRect& targetRect, const TransformationMatrix& modelViewMatrix, GC3Denum drawingMode, bool transparent)
+{
+    if (clipStack().current().scissorBox.isEmpty())
+        return;
+    Ref<TextureMapperShaderProgram> program = data().getShaderProgram(TextureMapperShaderProgram::SolidColor);
+    glUseProgram(program->programID());
+
+    float r, g, b, a;
+    Color(premultipliedARGBFromColor(color)).getRGBA(r, g, b, a);
+    glUniform4f(program->colorLocation(), r, g, b, a);
+    if (drawingMode == GraphicsContext3D::LINES ||
+        drawingMode == GraphicsContext3D::LINE_LOOP ||
+        drawingMode == GraphicsContext3D::LINE_STRIP)
+    {
+        glLineWidth(width);
+    }
+
+    draw(targetRect, modelViewMatrix, program.get(), drawingMode, (transparent? 0 : (!color.isOpaque() ? ShouldBlend : 0)));
+}
 // FIXME: drawNumber() should save a number texture-atlas and re-use whenever possible.
 void TextureMapperGL::drawNumber(int number, const Color& color, const FloatPoint& targetPoint, const TransformationMatrix& modelViewMatrix)
 {
@@ -466,7 +484,7 @@ void TextureMapperGL::drawTexture(const BitmapTexture& texture, const FloatRect&
 void TextureMapperGL::drawTexture(GLuint texture, Flags flags, const IntSize& textureSize, const FloatRect& targetRect, const TransformationMatrix& modelViewMatrix, float opacity, unsigned exposedEdges)
 {
     bool useRect = flags & ShouldUseARBTextureRect;
-    bool useAntialiasing = m_enableEdgeDistanceAntialiasing
+    bool useAntialiasing = getEnableEdgeDistanceAntialiasing()
         && exposedEdges == AllEdges
         && !modelViewMatrix.mapQuad(targetRect).isRectilinear();
 

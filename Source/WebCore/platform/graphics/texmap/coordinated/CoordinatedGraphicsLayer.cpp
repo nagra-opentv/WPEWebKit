@@ -4,6 +4,7 @@
  Copyright (C) 2012 Company 100, Inc.
  Copyright (C) 2012 Intel Corporation. All rights reserved.
  Copyright (C) 2017 Sony Interactive Entertainment Inc.
+ Copyright (C) 2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Library General Public
@@ -1072,7 +1073,12 @@ void CoordinatedGraphicsLayer::updateContentBuffers()
             auto& tileRect = tile.rect();
             auto& dirtyRect = tile.dirtyRect();
 
-            auto coordinatedBuffer = Nicosia::Buffer::create(dirtyRect.size(), contentsOpaque() ? Nicosia::Buffer::NoFlags : Nicosia::Buffer::SupportsAlpha);
+#if ENABLE(ACCELERATED_PAINTING)
+            Nicosia::Buffer::Flag flags = Nicosia::Buffer::Accelerated;
+#else
+            Nicosia::Buffer::Flag flags = Nicosia::Buffer::NoFlags;
+#endif
+            auto coordinatedBuffer = Nicosia::Buffer::create(dirtyRect.size(), contentsOpaque() ? (Nicosia::Buffer::NoFlags | flags) : (Nicosia::Buffer::SupportsAlpha | flags));
             SurfaceUpdateInfo updateInfo;
             updateInfo.updateRect = dirtyRect;
             updateInfo.updateRect.move(-tileRect.x(), -tileRect.y());

@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Igalia S.L.
+ * Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,8 +28,9 @@
 #define TextureMapperPlatformLayerProxy_h
 
 #if USE(COORDINATED_GRAPHICS_THREADED)
-
+#if ENABLE(OPENGL)
 #include "TextureMapperGLHeaders.h"
+#endif /*ENABLE_OPENGL)*/
 #include <wtf/Function.h>
 #include <wtf/Lock.h>
 #include <wtf/RunLoop.h>
@@ -61,7 +63,9 @@ public:
     // the implementation of TextureMapperPlatformLayerProxyProvider should
     // aquire / release the lock explicitly to use below methods.
     Lock& lock() { return m_lock; }
+#if ENABLE(OPENGL)
     std::unique_ptr<TextureMapperPlatformLayerBuffer> getAvailableBuffer(const IntSize&, GLint internalFormat);
+#endif
     void pushNextBuffer(std::unique_ptr<TextureMapperPlatformLayerBuffer>);
     bool isActive();
 

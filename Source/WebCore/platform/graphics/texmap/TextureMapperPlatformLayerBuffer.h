@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Igalia S.L.
+ * Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -27,8 +28,13 @@
 
 #if USE(COORDINATED_GRAPHICS_THREADED)
 
-#include "BitmapTextureGL.h"
+#if USE(TEXTURE_MAPPER_GL)
 #include "TextureMapperGLHeaders.h"
+#include "BitmapTextureGL.h"
+#else
+#include "BitmapTextureImageBuffer.h"
+#include "TextureMapperImageBuffer.h"
+#endif
 #include "TextureMapperPlatformLayer.h"
 #include <wtf/MonotonicTime.h>
 
@@ -38,15 +44,17 @@ class TextureMapperPlatformLayerBuffer : public TextureMapperPlatformLayer {
     WTF_MAKE_NONCOPYABLE(TextureMapperPlatformLayerBuffer);
     WTF_MAKE_FAST_ALLOCATED();
 public:
-    TextureMapperPlatformLayerBuffer(RefPtr<BitmapTexture>&&, TextureMapperGL::Flags = 0);
-    TextureMapperPlatformLayerBuffer(GLuint textureID, const IntSize&, TextureMapperGL::Flags, GLint internalFormat);
+    TextureMapperPlatformLayerBuffer(RefPtr<BitmapTexture>&&, TextureMapper::Flags = 0);
+    TextureMapperPlatformLayerBuffer(TextureID textureID, const IntSize&, TextureMapper::Flags, TextureFormat internalFormat);
 
     virtual ~TextureMapperPlatformLayerBuffer() = default;
 
     void paintToTextureMapper(TextureMapper&, const FloatRect&, const TransformationMatrix& modelViewMatrix = TransformationMatrix(), float opacity = 1.0) final;
 
-    bool canReuseWithoutReset(const IntSize&, GLint internalFormat);
+    bool canReuseWithoutReset(const IntSize&, TextureFormat internalFormat);
+ #if USE(TEXTURE_MAPPER_GL)
     BitmapTextureGL& textureGL() { return static_cast<BitmapTextureGL&>(*m_texture); }
+#endif
 
     inline void markUsed() { m_timeLastUsed = MonotonicTime::now(); }
     MonotonicTime lastUsedTime() const { return m_timeLastUsed; }
@@ -61,7 +69,7 @@ public:
 
     bool hasManagedTexture() const { return m_hasManagedTexture; }
     void setUnmanagedBufferDataHolder(std::unique_ptr<UnmanagedBufferDataHolder> holder) { m_unmanagedBufferDataHolder = WTFMove(holder); }
-    void setExtraFlags(TextureMapperGL::Flags flags) { m_extraFlags = flags; }
+    void setExtraFlags(TextureMapper::Flags flags) { m_extraFlags = flags; }
 
     std::unique_ptr<TextureMapperPlatformLayerBuffer> clone();
 
@@ -70,10 +78,10 @@ private:
     RefPtr<BitmapTexture> m_texture;
     MonotonicTime m_timeLastUsed;
 
-    GLuint m_textureID;
+    TextureID m_textureID;
     IntSize m_size;
-    GLint m_internalFormat;
-    TextureMapperGL::Flags m_extraFlags;
+    TextureFormat m_internalFormat;
+    TextureMapper::Flags m_extraFlags;
     bool m_hasManagedTexture;
     std::unique_ptr<UnmanagedBufferDataHolder> m_unmanagedBufferDataHolder;
 };

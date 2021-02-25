@@ -1,6 +1,4 @@
 /*
- * Copyright (C) 2017 Metrological Group B.V.
- * Copyright (C) 2017 Igalia S.L.
  * Copyright (C) 2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -29,58 +27,34 @@
 
 #pragma once
 
-#include "IntSize.h"
-#include <wtf/Condition.h>
-#include <wtf/Lock.h>
-#include <wtf/MallocPtr.h>
-#include <wtf/Ref.h>
-#include <wtf/ThreadSafeRefCounted.h>
+#if ENABLE(ACCELERATED_PAINTING)
+#include <wtf/RunLoop.h>
+#include "NicosiaBuffer.h"
+#include "RefPtrCairo.h"
+#include <cairo.h>
+#include <utility>
+#include "DirectfbUtilities.h"
 
 namespace Nicosia {
 
-class Buffer : public ThreadSafeRefCounted<Buffer> {
+class NicosiaDirectfbBuffer : public Buffer{
 public:
-    enum Flag {
-        NoFlags = 0,
-        SupportsAlpha = 1 << 0,
-#if ENABLE(ACCELERATED_PAINTING)
-        Accelerated = 1 << 1,
-#endif
-    };
-    using Flags = unsigned;
+    NicosiaDirectfbBuffer(const WebCore::IntSize& size, Flags flags);
+    virtual ~NicosiaDirectfbBuffer();
 
-    WEBCORE_EXPORT static Ref<Buffer> create(const WebCore::IntSize&, Flags);
-    WEBCORE_EXPORT virtual ~Buffer();
+    IDirectFBSurface* dfbSurface();
+    void releaseSurface();
 
-    bool supportsAlpha() const { return m_flags & SupportsAlpha; }
-#if ENABLE(ACCELERATED_PAINTING)
-    bool isAccelerated() const { return m_flags & Accelerated; }
-#endif
-    const WebCore::IntSize& size() const { return m_size; }
-    int stride() const { return m_size.width() * 4; }
-    virtual unsigned char* data() const { return m_data.get(); }
-
-    void beginPainting();
-    void completePainting();
-    void waitUntilPaintingComplete();
+    // Buffer class override
+    virtual unsigned char* data() const;
 
 protected:
-    Buffer(const WebCore::IntSize&, Flags);
-
-    MallocPtr<unsigned char> m_data;
-    WebCore::IntSize m_size;
-    Flags m_flags;
-
-    enum class PaintingState {
-        InProgress,
-        Complete
-    };
-
-    struct {
-        Lock lock;
-        Condition condition;
-        PaintingState state { PaintingState::Complete };
-    } m_painting;
+    virtual unsigned char* lock();
+    virtual void unlock();
+    unsigned char* m_pRawBuffer;
+    IDirectFBSurface* m_pDFBSurface;
 };
 
 } // namespace Nicosia
+
+#endif // ENABLE(ACCELERATED_PAINTING)

@@ -1,5 +1,6 @@
 /*
  Copyright (C) 2010-2012 Nokia Corporation and/or its subsidiary(-ies)
+ Copyright (c) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Library General Public
@@ -28,7 +29,12 @@
 
 namespace WebCore {
 
+#if USE(TEXTURE_MAPPER_GL)
 static const int defaultTileDimension = 512;
+#else
+static const int defaultTileDimension = 512*4; // with TEXTURE_MAPPER_CAIRO, performance is better with bigger tiles
+#endif 
+
 
 static IntPoint innerBottomRight(const IntRect& rect)
 {

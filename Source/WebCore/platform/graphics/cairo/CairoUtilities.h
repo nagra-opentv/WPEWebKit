@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2010 Igalia S.L.
  * Copyright (C) 2011 ProFUSION embedded systems
+ * Copyright (C) 2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,6 +38,10 @@
 
 #if USE(FREETYPE)
 #include <cairo-ft.h>
+#endif
+
+#if ENABLE(DIRECTFB) && (defined(CAIRO_HAS_DIRECTFB_SURFACE) && CAIRO_HAS_DIRECTFB_SURFACE)
+#include <cairo-directfb.h>
 #endif
 
 namespace WebCore {

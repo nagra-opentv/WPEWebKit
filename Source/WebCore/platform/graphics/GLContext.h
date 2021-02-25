@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2012 Igalia S.L.
+ * Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -20,7 +21,12 @@
 #ifndef GLContext_h
 #define GLContext_h
 
+#if ENABLE(GRAPHICS_CONTEXT_3D)
 #include "GraphicsContext3D.h"
+#else
+#include "GraphicsContext.h"
+#endif 
+#include "IntSize.h"
 #include "PlatformDisplay.h"
 #include <wtf/Noncopyable.h>
 
@@ -70,6 +76,8 @@ public:
 
 #if ENABLE(GRAPHICS_CONTEXT_3D)
     virtual PlatformGraphicsContext3D platformContext() = 0;
+#else
+    virtual GraphicsContext* platformContext() = 0;
 #endif
 
 #if PLATFORM(X11)

@@ -2,6 +2,7 @@
  * Copyright (C) 2010 Apple Inc. All rights reserved.
  * Copyright (C) 2010 Google Inc. All rights reserved.
  * Copyright (C) 2011 Igalia S.L.
+ * Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,10 +27,9 @@
  */
 
 #include "config.h"
-#include "GraphicsContext3D.h"
 
 #if ENABLE(GRAPHICS_CONTEXT_3D) && USE(TEXTURE_MAPPER)
-
+#include "GraphicsContext3D.h"
 #include "GraphicsContext3DPrivate.h"
 #include "TextureMapperGC3DPlatformLayer.h"
 #include <wtf/Deque.h>

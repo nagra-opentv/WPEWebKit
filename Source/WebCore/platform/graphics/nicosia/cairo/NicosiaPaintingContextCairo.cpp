@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2017 Metrological Group B.V.
  * Copyright (C) 2017 Igalia S.L.
+ * Copyright (C) 2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -33,13 +34,18 @@
 
 #include "GraphicsContext.h"
 #include "GraphicsContextImplCairo.h"
+#if ENABLE(ACCELERATED_PAINTING)
+#include "NicosiaDirectfbBuffer.h"
+#else 
 #include "NicosiaBuffer.h"
+#endif 
 #include "NicosiaCairoOperationRecorder.h"
 #include "NicosiaPaintingOperationReplayCairo.h"
 #include "PlatformContextCairo.h"
 #include "RefPtrCairo.h"
 #include <cairo.h>
 #include <utility>
+#include "CairoUtilities.h"
 
 namespace Nicosia {
 
@@ -48,8 +54,18 @@ PaintingContextCairo::ForPainting::ForPainting(Buffer& buffer)
     // Balanced by the deref in the s_bufferKey user data destroy callback.
     buffer.ref();
 
-    m_cairo.surface = adoptRef(cairo_image_surface_create_for_data(buffer.data(),
-        CAIRO_FORMAT_ARGB32, buffer.size().width(), buffer.size().height(), buffer.stride()));
+#if ENABLE(ACCELERATED_PAINTING)
+    if (buffer.isAccelerated() && buffer.size().width() > 0 && buffer.size().height() > 0 )
+    {   
+        IDirectFBSurface* pDFBSurface = (static_cast<NicosiaDirectfbBuffer&>(buffer)).dfbSurface();
+        m_cairo.surface = adoptRef(cairo_directfb_surface_create(WebCore::dfb(), pDFBSurface));
+    }
+    else
+#endif
+    {    
+        m_cairo.surface = adoptRef(cairo_image_surface_create_for_data(buffer.data(),
+            CAIRO_FORMAT_ARGB32, buffer.size().width(), buffer.size().height(), buffer.stride()));
+    }
 
     static cairo_user_data_key_t s_bufferKey;
     cairo_surface_set_user_data(m_cairo.surface.get(), &s_bufferKey,
@@ -60,6 +76,9 @@ PaintingContextCairo::ForPainting::ForPainting(Buffer& buffer)
 
             // Deref the Buffer object.
             userData->first->deref();
+#if ENABLE(ACCELERATED_PAINTING)
+            (static_cast<NicosiaDirectfbBuffer*>(userData->first))->releaseSurface();
+#endif
 #if !ASSERT_DISABLED
             // Mark the deletion of the cairo_surface_t object associated with this
             // PaintingContextCairo as complete. This way we check that the cairo_surface_t

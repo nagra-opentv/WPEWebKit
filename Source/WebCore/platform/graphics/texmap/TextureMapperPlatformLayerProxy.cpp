@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2015 Igalia S.L.
+ * Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -118,6 +119,7 @@ void TextureMapperPlatformLayerProxy::pushNextBuffer(std::unique_ptr<TextureMapp
         m_compositor->onNewBufferAvailable();
 }
 
+#if ENABLE(OPENGL)
 std::unique_ptr<TextureMapperPlatformLayerBuffer> TextureMapperPlatformLayerProxy::getAvailableBuffer(const IntSize& size, GLint internalFormat)
 {
     ASSERT(m_lock.isHeld());
@@ -141,6 +143,7 @@ std::unique_ptr<TextureMapperPlatformLayerBuffer> TextureMapperPlatformLayerProx
         scheduleReleaseUnusedBuffers();
     return availableBuffer;
 }
+#endif 
 
 void TextureMapperPlatformLayerProxy::appendToUnusedBuffers(std::unique_ptr<TextureMapperPlatformLayerBuffer> buffer)
 {

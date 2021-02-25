@@ -25,52 +25,45 @@
  * THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef BitmapTexturePool_h
-#define BitmapTexturePool_h
+#ifndef BitmapTextureImageBuffer_h
+#define BitmapTextureImageBuffer_h
 
 #include "BitmapTexture.h"
+#include "ImageBuffer.h"
 #include "TextureMapperContextAttributes.h"
-#include <wtf/RunLoop.h>
+#include "IntRect.h"
+#include "IntSize.h"
 
 namespace WebCore {
 
-class IntSize;
+class GraphicsContext;
 
-class BitmapTexturePool {
-    WTF_MAKE_NONCOPYABLE(BitmapTexturePool);
-    WTF_MAKE_FAST_ALLOCATED;
+typedef unsigned int TextureID;
+typedef unsigned int TextureFormat;
+
+class BitmapTextureImageBuffer : public BitmapTexture {
 public:
-#if USE(TEXTURE_MAPPER)
-    explicit BitmapTexturePool(const TextureMapperContextAttributes&);
-#endif
+    static Ref<BitmapTexture> create() { return adoptRef(*new BitmapTextureImageBuffer); }
+    virtual IntSize size() const { return m_image->internalSize(); }
+    virtual void didReset();
+    virtual bool isValid() const { return m_image.get(); }
+    inline GraphicsContext* graphicsContext() { return m_image ? &m_image->context() : nullptr; }
+    virtual void updateContents(Image*, const IntRect&, const IntPoint&) override;
+    virtual void updateContents(TextureMapper&, GraphicsLayer*, const IntRect& target, const IntPoint& offset, float) override;
+    virtual void updateContents(const void*, const IntRect& target, const IntPoint& sourceOffset, int bytesPerLine) override;
+       
+    RefPtr<BitmapTexture> applyFilters(TextureMapper*, const FilterOperations&);
+    ImageBuffer* image() const { return m_image.get(); }
 
-    RefPtr<BitmapTexture> acquireTexture(const IntSize&, const BitmapTexture::Flags);
+    void copyFromExternalTexture(void* textureID){ assert(0);}
+    virtual uint32_t id() const { return m_id; }
 
 private:
-    struct Entry {
-        explicit Entry(RefPtr<BitmapTexture>&& texture)
-            : m_texture(WTFMove(texture))
-        { }
-
-        void markIsInUse() { m_lastUsedTime = MonotonicTime::now(); }
-        bool canBeReleased (MonotonicTime minUsedTime) const { return m_lastUsedTime < minUsedTime && m_texture->refCount() == 1; }
-
-        RefPtr<BitmapTexture> m_texture;
-        MonotonicTime m_lastUsedTime;
-    };
-
-    void scheduleReleaseUnusedTextures();
-    void releaseUnusedTexturesTimerFired();
-    RefPtr<BitmapTexture> createTexture(const BitmapTexture::Flags);
-
-#if USE(TEXTURE_MAPPER)
-    TextureMapperContextAttributes m_contextAttributes;
-#endif
-
-    Vector<Entry> m_textures;
-    RunLoop::Timer<BitmapTexturePool> m_releaseUnusedTexturesTimer;
+    BitmapTextureImageBuffer();
+    std::unique_ptr<ImageBuffer> m_image;
+    uint32_t m_id;
 };
 
-} // namespace WebCore
+}
 
-#endif // BitmapTexturePool_h
+#endif // BitmapTextureImageBuffer_h

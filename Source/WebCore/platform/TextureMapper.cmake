@@ -24,6 +24,14 @@ if (USE_TEXTURE_MAPPER_GL)
     )
 endif ()
 
+if (ENABLE_DIRECTFB AND USE_TEXTURE_MAPPER_CAIRO)
+    list(APPEND WebCore_SOURCES
+        platform/graphics/texmap/TextureMapperImageBuffer.cpp
+        platform/graphics/texmap/BitmapTextureImageBuffer.cpp
+        platform/graphics/directfb/GLContextDirectFB.cpp
+    )
+endif ()
+
 if (USE_COORDINATED_GRAPHICS)
     list(APPEND WebCore_INCLUDE_DIRECTORIES
         "${WEBCORE_DIR}/page/scrolling/coordinatedgraphics"
@@ -45,6 +53,7 @@ if (USE_COORDINATED_GRAPHICS)
         "${WEBCORE_DIR}/platform/graphics/nicosia"
         "${WEBCORE_DIR}/platform/graphics/nicosia/cairo"
         "${WEBCORE_DIR}/platform/graphics/nicosia/texmap"
+        "${WEBCORE_DIR}/platform/graphics/nicosia/directfb"
     )
     list(APPEND WebCore_SOURCES
         platform/graphics/nicosia/NicosiaBuffer.cpp
@@ -57,6 +66,7 @@ if (USE_COORDINATED_GRAPHICS)
 
         platform/graphics/nicosia/cairo/NicosiaCairoOperationRecorder.cpp
         platform/graphics/nicosia/cairo/NicosiaPaintingContextCairo.cpp
+        platform/graphics/nicosia/directfb/NicosiaDirectfbBuffer.cpp
 
         platform/graphics/nicosia/texmap/NicosiaBackingStoreTextureMapperImpl.cpp
         platform/graphics/nicosia/texmap/NicosiaCompositionLayerTextureMapperImpl.cpp

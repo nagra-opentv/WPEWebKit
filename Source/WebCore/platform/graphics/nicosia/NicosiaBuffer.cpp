@@ -1,6 +1,7 @@
 /*
  * Copyright (C) 2017 Metrological Group B.V.
  * Copyright (C) 2017 Igalia S.L.
+ * Copyright (C) 2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,24 +31,42 @@
 #include "NicosiaBuffer.h"
 
 #include <wtf/FastMalloc.h>
+#if ENABLE(ACCELERATED_PAINTING)
+#include "NicosiaDirectfbBuffer.h"
+#endif
 
 namespace Nicosia {
 
+#if ENABLE(ACCELERATED_PAINTING)
+using BufferClass = Nicosia::NicosiaDirectfbBuffer;
+#else
+using BufferClass = Nicosia::Buffer;
+#endif
+
 Ref<Buffer> Buffer::create(const WebCore::IntSize& size, Flags flags)
 {
-    return adoptRef(*new Buffer(size, flags));
+    return adoptRef(*new BufferClass(size, flags));
 }
 
 Buffer::Buffer(const WebCore::IntSize& size, Flags flags)
     : m_size(size)
     , m_flags(flags)
 {
-    auto checkedArea = size.area() * 4;
-    unsigned char* bufferData;
-    if (!tryFastZeroedMalloc(checkedArea.unsafeGet()).getValue(bufferData))
-        return;
+#if ENABLE(ACCELERATED_PAINTING)
+    if(m_flags & Accelerated)
+    {
+        m_data = NULL;    
+    }
+    else
+#endif
+    {
+        auto checkedArea = size.area() * 4;
+        unsigned char* bufferData;
+        if (!tryFastZeroedMalloc(checkedArea.unsafeGet()).getValue(bufferData))
+            return;
 
-    m_data = adoptMallocPtr(bufferData);
+        m_data = adoptMallocPtr(bufferData);
+    }
 }
 
 Buffer::~Buffer() = default;

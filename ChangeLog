@@ -1,3 +1,25 @@
+2021-02-25  Eduard Kegulskiy  <ed_dvd@yahoo.com>
+        Add DirectFB support to WPE, including running WPE without OpenGL/EGL.
+
+        The following new options have been added to OptionsWPE.cmake:
+        
+        ENABLE_DIRECTFB - enables DirectFB support. Defining this flag does the following:
+                * Files located under Source/WebCore/platform/graphics/directfb/ are compiled and provide APIs for creating and releasing of DirectFB
+                surfaces. 
+                * CairoUtilities.cpp and CairoOperations.cpp are modified to support surfaces of type CAIRO_SURFACE_TYPE_DIRECTFB.
+
+        ENABLE_ACCELERATED_PAINTING - enables experimental hardware acceleration using DirectFB. Defining this flag does the following:
+                * A new capability is added to the Nicosia::Buffer class to indicate whether the buffer should be accelerated. (NicosiaBuffer.h)
+                * A new class Nicosia::NicosiaDirectfbBuffer is implemented to provide hardware accelerated buffers via DirectFB.  It creates off-screen
+                * DirectFB surface which is then used by cairo DirectFB surfaces to achieve hardware acceleration.
+                * NicosiaPaintingContextCairo is modified to deal with NicosiaDirectfbBuffer when enabled.
+                * CoordinatedGraphicsLayer and CoordinatedImageBacking classes are modified to use hardware-accelerated buffers when enabled.
+                * ImageBackingStore is modified to use accelerated buffers for storing the decoded image
+
+        ENABLE_OPENGL - when disabled, turns OFF EGL and is using newly added Cairo Accelerated Compositing feature. The implementation is based on code that
+                        existed some time ago in WebKit-GTK. The original code has been modified to work with DirectFB, and adapted to the Threaded Compositing 
+                        feature in WPE. Note that it requiers patches for libwpe and wpebackend-rdk-directfb to support running without opengl and egl.
+
 2018-10-02  Adrian Perez de Castro  <aperez@igalia.com>
 
         Unreviewed. Update OptionsWPE.cmake and NEWS for the 2.22.0 release.

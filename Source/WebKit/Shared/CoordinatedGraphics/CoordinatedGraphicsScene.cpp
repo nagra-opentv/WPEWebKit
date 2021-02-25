@@ -2,6 +2,7 @@
     Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies)
     Copyright (C) 2012 Company 100, Inc.
     Copyright (C) 2017 Sony Interactive Entertainment Inc.
+    Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -51,7 +52,7 @@ void CoordinatedGraphicsScene::applyStateChanges(const Vector<CoordinatedGraphic
 {
     if (!m_textureMapper) {
         m_textureMapper = TextureMapper::create();
-        static_cast<TextureMapperGL*>(m_textureMapper.get())->setEnableEdgeDistanceAntialiasing(true);
+        m_textureMapper->setEnableEdgeDistanceAntialiasing(true);
     }
 
     ensureRootLayer();

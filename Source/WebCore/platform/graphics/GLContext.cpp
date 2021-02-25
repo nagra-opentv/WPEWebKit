@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2011, 2012 Igalia, S.L.
+ * Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -18,12 +19,15 @@
 
 #include "config.h"
 
-#if ENABLE(GRAPHICS_CONTEXT_3D)
 #include "GLContext.h"
 #include <wtf/ThreadSpecific.h>
 
 #if USE(EGL)
 #include "GLContextEGL.h"
+#endif
+
+#if !USE(EGL) && ENABLE(DIRECTFB)
+#include "directfb/GLContextDirectFB.h"
 #endif
 
 #if USE(LIBEPOXY)
@@ -63,7 +67,7 @@ inline ThreadGlobalGLContext* currentContext()
 
 static bool initializeOpenGLShimsIfNeeded()
 {
-#if USE(OPENGL_ES) || USE(LIBEPOXY)
+#if USE(OPENGL_ES) || USE(LIBEPOXY) || !USE(EGL)
     return true;
 #else
     static bool initialized = false;
@@ -98,6 +102,11 @@ std::unique_ptr<GLContext> GLContext::createContextForWindow(GLNativeWindowType 
     if (auto eglContext = GLContextEGL::createContext(windowHandle, display))
         return WTFMove(eglContext);
 #endif
+
+#if !USE(EGL) && ENABLE(DIRECTFB)
+    if (auto dfbContext = GLContextDirectFB::createContext(windowHandle, display))
+        return WTFMove(dfbContext);
+#endif
     return nullptr;
 }
 
@@ -121,7 +130,7 @@ std::unique_ptr<GLContext> GLContext::createSharingContext(PlatformDisplay& disp
     }
 #endif
 
-#if USE(EGL) || PLATFORM(WAYLAND) || PLATFORM(WPE)
+#if USE(EGL) || PLATFORM(WAYLAND)
     if (auto eglContext = GLContextEGL::createSharingContext(display))
         return WTFMove(eglContext);
 #endif
@@ -169,6 +178,7 @@ bool GLContext::isExtensionSupported(const char* extensionList, const char* exte
 
 unsigned GLContext::version()
 {
+#if USE(EGL)
     if (!m_version) {
         // Version string can start with the version number (all versions except GLES 1 and 2) or with
         // "OpenGL". Different fields inside the version string are separated by spaces.
@@ -189,9 +199,10 @@ unsigned GLContext::version()
 
         m_version = versionDigits[0].toUInt() * 100 + versionDigits[1].toUInt() * 10;
     }
+#else
+    m_version = 0;
+#endif
     return m_version;
 }
 
 } // namespace WebCore
-
-#endif

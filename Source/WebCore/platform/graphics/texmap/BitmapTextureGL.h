@@ -1,6 +1,7 @@
 /*
  Copyright (C) 2010 Nokia Corporation and/or its subsidiary(-ies)
  Copyright (C) 2014 Igalia S.L.
+ Copyright (C) 2018-2020 OpenTV, Inc. and Nagravision S.A. All rights reserved.
 
  This library is free software; you can redistribute it and/or
  modify it under the terms of the GNU Library General Public
@@ -36,6 +37,9 @@ namespace WebCore {
 class TextureMapper;
 class TextureMapperGL;
 class FilterOperation;
+
+typedef GLuint TextureID;
+typedef GLint TextureFormat;
 
 class BitmapTextureGL : public BitmapTexture {
 public:
